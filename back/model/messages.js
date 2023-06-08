@@ -15,6 +15,10 @@ const messageSchema = mongoose.Schema(
       ref: "Room",
       required: true,
     },
+    emoji: {
+      type: String,
+      required: true,
+    }
   },
   {
     timestamps: true,

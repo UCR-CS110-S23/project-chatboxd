@@ -93,11 +93,12 @@ io.use((socket, next) => {
 
 io.use((socket, next) => {
   if (socket.request.session && socket.request.session.authenticated) {
+    console.log("authorized")
     next();
   } else {
-    //console.log("unauthorized")
-    /* next(new Error('unauthorized')); */
+    console.log("unauthorized")
     next();
+    //next(new Error('unauthorized'));
   }
 });
 
@@ -105,8 +106,8 @@ io.use((socket, next) => {
 io.on('connection', (socket)=>{
   let room = undefined;
   let username = undefined;
-  let roomMessages = []
-  //console.log("user connected")
+  let roomMessages = [];
+  console.log("user connected")
   // TODO: write codes for the messaging functionality
   // TODO: your code here
   socket.on("disconnect", ()=>{
@@ -115,7 +116,103 @@ io.on('connection', (socket)=>{
 
   socket.on("room delete", async(roomObj)=>{
     io.emit("update room after deletion", {msg: "update room"})
-    io.to(roomObj.name).emit("room delete", {msg: "failed message"})
+    io.to(roomObj.name).emit("room gone", {msg: "failed message"})
+  })
+
+  socket.on("search", async(msg)=>{
+    tempArray = []
+    const allMessages = await Message.find({}).populate('sender').populate('room')
+    for (let i = 0; i < allMessages.length; ++i){
+      if(allMessages[i].room.name == room){
+        if( (allMessages[i].sender.name).includes(msg)  || (allMessages[i].message.text).includes(msg) )
+          tempArray.push(allMessages[i])
+      }
+    }
+    roomMessages = tempArray
+    socket.emit("search history", roomMessages)
+    /* console.log("INDEX JS THE MESSAGES", roomMessages) */
+  })
+
+  socket.on("emoted", async(data) => {
+
+    const messageListForRoom = await Message.find({_id: data.id}).populate('sender').populate('room')
+    msg = messageListForRoom[0]
+    if(msg.emoji == 'dislike'){
+      if(data.stance === 'like'){
+        const updateMessage = {
+          $set: {
+            emoji: data.stance,
+          },
+        }
+        const result = await Message.updateOne({_id: data.id}, updateMessage)
+      }
+      else{
+        const updateMessage = {
+          $set: {
+            emoji: "none",
+          },
+        }
+        const result = await Message.updateOne({_id: data.id}, updateMessage)
+      }
+    }
+    else if(msg.emoji == 'like'){
+      if(data.stance === 'dislike'){
+        const updateMessage = {
+          $set: {
+            emoji: data.stance,
+          },
+        }
+        const result = await Message.updateOne({_id: data.id}, updateMessage)
+      }
+      else{
+        const updateMessage = {
+          $set: {
+            emoji: "none",
+          },
+        }
+        const result = await Message.updateOne({_id: data.id}, updateMessage)
+      }
+    }
+    else{
+      const updateMessage = {
+        $set: {
+          emoji: data.stance,
+        },
+      }
+      const result = await Message.updateOne({_id: data.id}, updateMessage)
+    }
+
+    //reload history
+    const r = await Room.findOne({name: room})
+    const messagesForRoom = await Message.find({room:(r._id)}).populate('sender').populate('room')
+    if(messagesForRoom){
+      roomMessages = messagesForRoom;
+      io.to(room).emit("load history", roomMessages)
+    }
+    else{
+      console.log("MESSAGES NOT FOUND")
+    }
+  })
+
+  socket.on("edited message", async(data) => {
+    console.log("Receiving in socket edited message")
+    console.log("DATA RECEIVED", data)
+    const updateMessage = {
+      $set: {
+        message: {text:data.newMsg},
+      },
+    }
+    const result = await Message.updateOne({_id: data.id}, updateMessage)
+    //reload history
+    const r = await Room.findOne({name: room})
+    const messagesForRoom = await Message.find({room:(r._id)}).populate('sender').populate('room')
+    if(messagesForRoom){
+      roomMessages = messagesForRoom;
+      io.to(room).emit("load history", roomMessages)
+    }
+    else{
+      console.log("MESSAGES NOT FOUND")
+    }
   })
 
   socket.on("chat message", async(text)=>{
@@ -126,20 +223,24 @@ io.on('connection', (socket)=>{
       message: {text:text},
       sender: u._id,
       room: r._id,
+      emoji: "none",
     })
 
     try{
-        const dataSaved = await message.save();
+      const dataSaved = await message.save();
     }
 
     catch (error){
         console.log(error);
     }
 
+    //io.to(room).emit('update')
     //reload history
     const messagesForRoom = await Message.find({room:(r._id)}).populate('sender').populate('room')
     if(messagesForRoom){
       roomMessages = messagesForRoom;
+      //socket.emit("load history", roomMessages)
+      /* socket.broadcast.to(room).emit("load history", roomMessages) */
       io.to(room).emit("load history", roomMessages)
     }
     else{
@@ -148,13 +249,14 @@ io.on('connection', (socket)=>{
     
   })
 
-  socket.on("load history", async(data) => {
+  /* socket.on("grab history", async(data) => { */
+  socket.on("grab history", async() => {
     roomMessages = []
     const r = await Room.findOne({name: room})
     const messagesForRoom = await Message.find({room:(r._id)}).populate('sender').populate('room')
     if(messagesForRoom){
       roomMessages = messagesForRoom;
-      io.to(room).emit("load history", roomMessages)
+      socket.emit("load history", roomMessages)
     }
     else{
       console.log("MESSAGES NOT FOUND")

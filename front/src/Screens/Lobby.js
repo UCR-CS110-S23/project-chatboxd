@@ -9,13 +9,19 @@ class Lobby extends react.Component{
     constructor(props){
         super(props);
         this.state = {
+            username: undefined,
             screen: "starting",
             showForm: false,
             selectedForm: undefined,
             room: undefined,
             rooms: [],
         }
-        this.socket = io('http://localhost:3001'); 
+        this.socket = io('http://localhost:3001', 
+            {
+            cors:{origin: 'http://localhost:3001',
+            credentials: true},
+            transports: ['websocket']
+            }); 
     }
 
     componentDidMount(){
@@ -38,6 +44,7 @@ class Lobby extends react.Component{
     } */
 
     sendChat = (text) => {
+        console.log("SENDING")
         this.socket.emit("chat message", text)
     }
 
@@ -99,10 +106,12 @@ class Lobby extends react.Component{
             res.json().then((data) => {
                 if (data.msg === "Room Found"){
                     this.socket.emit("join", {"room":roomObj.name, "username":data.username});
-                    this.socket.emit("load history", {"room":roomObj.name})
+                    this.socket.emit("grab history")
+                    //this.socket.emit("grab history", {"room":roomObj.name})
                     this.setState({showForm: false});
                     this.setState({screen: "chat"});
                     this.setState({room: roomObj.name});
+                    this.setState({username:data.username})
                     this.state.room = roomObj.name;
                     if(!(this.state.rooms.includes(roomObj.name))) //STUCK HERE
                         this.state.rooms.push(roomObj.name);
@@ -208,7 +217,7 @@ class Lobby extends react.Component{
                 {this.state.screen === "starting" ? <h1>Lobby</h1> : <div> Room: {this.state.room} </div>}
                 {this.state.screen === "starting" ?
                     <StartingPage rooms={this.state.rooms} roomSelect={this.roomSelect}></StartingPage>
-                    : <Chatroom sendChat={this.sendChat} socket={this.socket} goBack={this.goBack}></Chatroom>}
+                    : <Chatroom username={this.state.username} sendChat={this.sendChat} socket={this.socket} goBack={this.goBack}></Chatroom>}
                 {/* write codes to join a new room using room id*/}
                 {/* write codes to enable user to create a new room*/}
                 {this.state.screen === "starting" ? 
