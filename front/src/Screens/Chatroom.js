@@ -161,6 +161,7 @@ class Chatroom extends react.Component{
               <div className="chatroom-header">Chatroom</div>
               
               {/* Input form for searching messages */}
+              {(this.state.error !== "exists") && (
               <div className="chatroom-search-form">
                 <input
                   type="text"
@@ -170,17 +171,18 @@ class Chatroom extends react.Component{
                 />
                 <button onClick={this.searchMessage}>Search</button>
               </div>
+                )}
               
               {/* List of messages */}
               <ul className="chatroom-message-list">
                 {this.state.messages.map((message) => (
                   <li key={message._id}>
-                    <div className="message">
+                    <div className="message" onClick={()=>this.react(message._id)}>
                       <div className="sender">{message.sender.name}</div>
                       <div className="text">{message.message.text}</div>
                     </div>
                     <div className="actions">
-                      {this.state.username === message.sender.username && (
+                      {this.state.username === message.sender.username && (this.state.error !== "exists") && (
                         <button onClick={() => this.setState({ id: message._id, showForm: true, selectedForm: "edit", originalMsg: message.message.text, newMsg: message.message.text })}>
                           Edit
                         </button>
@@ -195,7 +197,7 @@ class Chatroom extends react.Component{
               </ul>
               
               {/* Form for sending messages */}
-              {!this.state.showForm && (
+              {!this.state.showForm && (this.state.error !== "exists") && (
                 <div className="chatroom-form">
                   <input
                     type="text"
@@ -210,7 +212,7 @@ class Chatroom extends react.Component{
               )}
       
               {/* Display form for editing or reacting to a message */}
-              {this.state.showForm && (
+              {this.state.showForm && (this.state.error !== "exists") && (
                 <div className="chatroom-form">
                     {this.state.selectedForm === "edit" && (
                     <div>
@@ -240,6 +242,10 @@ class Chatroom extends react.Component{
                 </div>
                 )}
       
+             {this.state.error === "exists" && (
+                <div>Room does not exist anymore. Please press back button. </div>
+             )}
+
               {/* Back to lobby button */}
               <Button onClick={() => this.props.goBack()}>Back to Lobby</Button>
             </div>

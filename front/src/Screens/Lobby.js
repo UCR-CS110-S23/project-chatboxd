@@ -208,6 +208,18 @@ class Lobby extends react.Component{
         
           this.socket.on("update room after deletion", (data) => {
             // Update room after deletion logic
+            fetch(this.props.server_url + '/api/rooms/all', {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            }).then((res) => {
+                res.json().then((data) => {
+                    this.state.rooms = data;
+                    this.setState({rooms:data})
+                })
+            });
           });
         
           return (
