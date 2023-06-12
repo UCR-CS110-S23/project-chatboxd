@@ -4,6 +4,7 @@ import StartingPage from "./StartingPage";
 import { io } from 'socket.io-client';
 import Chatroom from './Chatroom';
 import Form from "../Components/form.js";
+import '../Styles/Lobby.css'
 
 class Lobby extends react.Component{
     constructor(props){
@@ -190,11 +191,19 @@ class Lobby extends react.Component{
             } 
         }
         else{
-            display = <div>
-                <Button onClick={() => this.setState({showForm: true, selectedForm:"createRoom"})}> Create a room </Button>
-                <Button onClick={() => this.setState({showForm: true, selectedForm:"joinRoom"})}> Join a room </Button>
-                <Button onClick={() => this.setState({showForm: true, selectedForm:"deleteRoom"})}> Delete a room </Button>
-            </div>;
+            display = (
+                <div>
+                  <Button onClick={() => this.setState({ showForm: true, selectedForm: "createRoom" })}>
+                    Create a room
+                  </Button>
+                  <Button onClick={() => this.setState({ showForm: true, selectedForm: "joinRoom" })}>
+                    Join a room
+                  </Button>
+                  <Button onClick={() => this.setState({ showForm: true, selectedForm: "deleteRoom" })}>
+                    Delete a room
+                  </Button>
+                </div>
+              );
         }
 
         this.socket.on('update room after deletion', (data)=>{
@@ -213,16 +222,18 @@ class Lobby extends react.Component{
         })
 
         return(
-            <div>
+            <div className="lobby">
                 {this.state.screen === "starting" ? <h1>Lobby</h1> : <div> Room: {this.state.room} </div>}
-                {this.state.screen === "starting" ?
-                    <StartingPage rooms={this.state.rooms} roomSelect={this.roomSelect}></StartingPage>
-                    : <Chatroom username={this.state.username} sendChat={this.sendChat} socket={this.socket} goBack={this.goBack}></Chatroom>}
-                {/* write codes to join a new room using room id*/}
-                {/* write codes to enable user to create a new room*/}
-                {this.state.screen === "starting" ? 
+                {this.state.screen === "starting" ? (
+                    <StartingPage rooms={this.state.rooms} roomSelect={this.roomSelect} />
+                ) : (
+                    <Chatroom username={this.state.username} sendChat={this.sendChat} socket={this.socket} goBack={this.goBack} />
+                )}
+                {this.state.screen === "starting" ? (
                     display
-                    : <div></div>}
+                ) : (
+                <div></div>
+                )}
             </div>
         );
     }

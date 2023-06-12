@@ -3,6 +3,7 @@ import {useState} from "react"
 import { Button } from "@mui/material";
 import likeEmoji from "../images/like.png"
 import dislikeEmoji from "../images/dislike.png"
+import '../Styles/Chatroom.css'
 /* import UserMessage from "../Components/message.js"; */
 
 class Chatroom extends react.Component{
@@ -155,49 +156,92 @@ class Chatroom extends react.Component{
             this.setState({messages:history});
         })
 
-        return(
-            <div>
-                <div>
-                    <form onSubmit={this.searchMessage}>
-                        <label>
-                        Search the chat: <br></br> 
-                        <input type="text" value={this.state.searchMsg} onChange={(e) => this.setState({"searchMsg":e.target.value} )} />
-                        </label>
-                        <input type="submit" value="Search" />
-                    </form>
-                </div>
-                {/* show chats */}
-                <div style={{fontWeight:'bold', marginTop:'20px'}}>
-                CHATS
-                </div>
-                <ul>
-                    {this.state.messages.map((message)=> 
-                    {
-                    return <li>
-                    
-                    <div style={{display:'flex', flexDirection:'row'}}>
-                        {/* <div onClick={()=>this.setState({id: message._id, showForm: true, selectedForm:"emoji"})}> */}
-                        <div onClick={()=>this.react(message._id)}>
-                        {message.sender.name}: {message.message.text} 
-                        {(message.emoji) === "like" ? <img style={{width:10, height:10}} src={likeEmoji} alt="likeEmoji"/>
-                            : <></>
-                        }
-                        {(message.emoji) === "dislike" ? <img style={{width:10, height:10}} src={dislikeEmoji} alt="dislikeEmoji"/>
-                            : <></>
-                        }
-                        </div>
-
-                        { (this.state.username === message.sender.username) && (this.state.error === "none") && (this.state.searching === false) ? 
-                        <button style={{color:"blue"}} onClick={()=>this.setState({id: message._id, showForm: true, selectedForm:"edit", originalMsg:message.message.text, newMsg:message.message.text})}>EDIT</button>
-                        : <div></div>}
-
+        return (
+            <div className="chatroom-container">
+              <div className="chatroom-header">Chatroom</div>
+              
+              {/* Input form for searching messages */}
+              <div className="chatroom-search-form">
+                <input
+                  type="text"
+                  value={this.state.searchMsg}
+                  onChange={(e) => this.setState({ searchMsg: e.target.value })}
+                  placeholder="Search the chat"
+                />
+                <button onClick={this.searchMessage}>Search</button>
+              </div>
+              
+              {/* List of messages */}
+              <ul className="chatroom-message-list">
+                {this.state.messages.map((message) => (
+                  <li key={message._id}>
+                    <div className="message">
+                      <div className="sender">{message.sender.name}</div>
+                      <div className="text">{message.message.text}</div>
                     </div>
-                    </li>;
-                    })
-                    }
-                </ul>
-                {display}
-            
+                    <div className="actions">
+                      {this.state.username === message.sender.username && (
+                        <button onClick={() => this.setState({ id: message._id, showForm: true, selectedForm: "edit", originalMsg: message.message.text, newMsg: message.message.text })}>
+                          Edit
+                        </button>
+                      )}
+                      <div onClick={() => this.react(message._id)} className="emoji">
+                        {message.emoji === "like" && <img src={likeEmoji} alt="likeEmoji" />}
+                        {message.emoji === "dislike" && <img src={dislikeEmoji} alt="dislikeEmoji" />}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              
+              {/* Form for sending messages */}
+              {!this.state.showForm && (
+                <div className="chatroom-form">
+                  <input
+                    type="text"
+                    id="text"
+                    onChange={(e) => {
+                      this.setState({ text: e.target.value });
+                    }}
+                    placeholder="Send a message"
+                  />
+                  <button onClick={() => this.props.sendChat(this.state.text)}>Send</button>
+                </div>
+              )}
+      
+              {/* Display form for editing or reacting to a message */}
+              {this.state.showForm && (
+                <div className="chatroom-form">
+                    {this.state.selectedForm === "edit" && (
+                    <div>
+                        <button onClick={() => this.closeForm()}>X</button>
+                        <form onSubmit={this.editMessage}>
+                        <label>
+                            Edit your message:
+                            <input
+                            type="text"
+                            value={this.state.newMsg}
+                            onChange={(e) => this.setState({ newMsg: e.target.value })}
+                            />
+                        </label>
+                        <input type="submit" value="Submit" />
+                        </form>
+                    </div>
+                    )}
+
+                    {this.state.selectedForm === "emoji" && (
+                    <div>
+                        <button onClick={() => this.closeForm()}>X</button>
+                        <div>React to the message!</div>
+                        <button onClick={() => this.emoji({ stance: "like" })}>Like</button>
+                        <button onClick={() => this.emoji({ stance: "dislike" })}>Dislike</button>
+                    </div>
+                    )}
+                </div>
+                )}
+      
+              {/* Back to lobby button */}
+              <Button onClick={() => this.props.goBack()}>Back to Lobby</Button>
             </div>
         );
     }
