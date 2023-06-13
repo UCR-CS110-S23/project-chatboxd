@@ -1,5 +1,6 @@
 import react from "react";
 import Form from "../Components/form.js";
+import '../Styles/Auth.css';
 import { Button } from "@mui/material";
 
 class Auth extends react.Component{
@@ -59,41 +60,70 @@ class Auth extends react.Component{
         });
     }
 
-    render(){
+    render() {
         let display = null;
-        if (this.state.showForm){
-            let fields = [];
-            if (this.state.selectedForm === "login"){
-                fields = ['username', 'password'];
-                display = <Form fields={fields} 
-                close={this.closeForm} 
-                type="login" 
-                submit={this.login} 
-                key={this.state.selectedForm}/>;
-            }
-            else if (this.state.selectedForm === "register"){
-                fields = [ 'username', 'password', 'name'];
-                display = <Form 
-                fields={fields} 
-                close={this.closeForm} 
-                type="register" 
-                submit={this.register} 
-                key={this.state.selectedForm}/>;
-            }  
-        }
-        else{
-            display = <div>
-                <Button onClick={() => this.setState({showForm: true, selectedForm:"login"})}> Login </Button>
-                <Button onClick={() => this.setState({showForm: true, selectedForm: "register"})}> Register </Button>
-                </div>;
-        }
-        return(
-            <div>
-                <h1> Welcome to our website! </h1>
-                {display}
+        if (this.state.showForm) {
+          let formComponent = null;
+          if (this.state.selectedForm === "login") {
+            const fields = ["username", "password"];
+            formComponent = (
+              <Form
+                fields={fields}
+                close={this.closeForm}
+                type="login"
+                submit={this.login}
+                key={this.state.selectedForm}
+              />
+            );
+          } else if (this.state.selectedForm === "register") {
+            const fields = ["username", "password", "name"];
+            formComponent = (
+              <Form
+                fields={fields}
+                close={this.closeForm}
+                type="register"
+                submit={this.register}
+                key={this.state.selectedForm}
+              />
+            );
+          }
+    
+          display = (
+            <div className="auth-form-container">
+              <div className="auth-form">
+                {formComponent}
+              </div>
             </div>
+          );
+        } else {
+          display = (
+            <div className="auth-buttons">
+              <Button
+                className="auth-button"
+                onClick={() =>
+                  this.setState({ showForm: true, selectedForm: "login" })
+                }
+              >
+                Login
+              </Button>
+              <Button
+                className="auth-button"
+                onClick={() =>
+                  this.setState({ showForm: true, selectedForm: "register" })
+                }
+              >
+                Register
+              </Button>
+            </div>
+          );
+        }
+        return (
+          <div className="auth-container">
+            <h1 className="auth-title">Welcome to our website!</h1>
+            {display}
+          </div>
         );
+      }
     }
-}
-
-export default Auth;
+    
+    export default Auth;

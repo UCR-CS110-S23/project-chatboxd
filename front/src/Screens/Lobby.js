@@ -4,6 +4,7 @@ import StartingPage from "./StartingPage";
 import { io } from 'socket.io-client';
 import Chatroom from './Chatroom';
 import Form from "../Components/form.js";
+import '../Styles/Lobby.css'
 
 class Lobby extends react.Component{
     constructor(props){
@@ -189,15 +190,24 @@ class Lobby extends react.Component{
                 key={this.state.selectedForm}/>;
             } 
         }
-        else{
-            display = <div>
-                <Button onClick={() => this.setState({showForm: true, selectedForm:"createRoom"})}> Create a room </Button>
-                <Button onClick={() => this.setState({showForm: true, selectedForm:"joinRoom"})}> Join a room </Button>
-                <Button onClick={() => this.setState({showForm: true, selectedForm:"deleteRoom"})}> Delete a room </Button>
-            </div>;
-        }
-
-        this.socket.on('update room after deletion', (data)=>{
+        else {
+            display = (
+              <div className="button-container">
+                <Button onClick={() => this.setState({ showForm: true, selectedForm: "createRoom" })}>
+                  Create a room
+                </Button>
+                <Button onClick={() => this.setState({ showForm: true, selectedForm: "joinRoom" })}>
+                  Join a room
+                </Button>
+                <Button onClick={() => this.setState({ showForm: true, selectedForm: "deleteRoom" })}>
+                  Delete a room
+                </Button>
+              </div>
+            );
+          }
+        
+          this.socket.on("update room after deletion", (data) => {
+            // Update room after deletion logic
             fetch(this.props.server_url + '/api/rooms/all', {
                 method: "GET",
                 credentials: "include",
@@ -210,21 +220,19 @@ class Lobby extends react.Component{
                     this.setState({rooms:data})
                 })
             });
-        })
-
-        return(
-            <div>
-                {this.state.screen === "starting" ? <h1>Lobby</h1> : <div> Room: {this.state.room} </div>}
-                {this.state.screen === "starting" ?
-                    <StartingPage rooms={this.state.rooms} roomSelect={this.roomSelect}></StartingPage>
-                    : <Chatroom username={this.state.username} sendChat={this.sendChat} socket={this.socket} goBack={this.goBack}></Chatroom>}
-                {/* write codes to join a new room using room id*/}
-                {/* write codes to enable user to create a new room*/}
-                {this.state.screen === "starting" ? 
-                    display
-                    : <div></div>}
+          });
+        
+          return (
+            <div className="lobby">
+              {this.state.screen === "starting" ? <h1>Lobby</h1> : <div className="room-info">Room: {this.state.room}</div>}
+              {this.state.screen === "starting" ? (
+                <StartingPage rooms={this.state.rooms} roomSelect={this.roomSelect} />
+              ) : (
+                <Chatroom username={this.state.username} sendChat={this.sendChat} socket={this.socket} goBack={this.goBack} />
+              )}
+              {this.state.screen === "starting" ? display : <div className="empty-container"></div>}
             </div>
-        );
+          );
     }
 }
 
